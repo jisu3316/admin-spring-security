@@ -1,12 +1,14 @@
 package com.jisu.adminspringsecurity.security.configs;
 
 import com.jisu.adminspringsecurity.security.common.FormWebAuthenticationDetailsSource;
+import com.jisu.adminspringsecurity.security.factory.UrlResourcesMapFactoryBean;
 import com.jisu.adminspringsecurity.security.handler.AjaxAuthenticationFailureHandler;
 import com.jisu.adminspringsecurity.security.handler.AjaxAuthenticationSuccessHandler;
 import com.jisu.adminspringsecurity.security.handler.FormAccessDeniedHandler;
-import com.jisu.adminspringsecurity.security.metadatasource.UrlFilterInvocationSecurityMetadatsSource;
+import com.jisu.adminspringsecurity.security.metadatasource.UrlFilterInvocationSecurityMetadataSource;
 import com.jisu.adminspringsecurity.security.provider.AjaxAuthenticationProvider;
 import com.jisu.adminspringsecurity.security.provider.FormAuthenticationProvider;
+import com.jisu.adminspringsecurity.service.SecurityResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -34,6 +36,7 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.ResourceBundle;
 
 @Configuration
 @EnableWebSecurity
@@ -46,6 +49,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private AuthenticationSuccessHandler formAuthenticationSuccessHandler;
     @Autowired
     private AuthenticationFailureHandler formAuthenticationFailureHandler;
+    @Autowired
+    private SecurityResourceService securityResourceService;
 
     @Override
     public void configure(WebSecurity web) throws Exception {
@@ -86,8 +91,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
                 .accessDeniedPage("/denied")
                 .accessDeniedHandler(accessDeniedHandler())
-//        .and()
-//                .addFilterBefore(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class)
+        .and()
+                .addFilterBefore(customFilterSecurityInterceptor(), FilterSecurityInterceptor.class)
         ;
 
         http.csrf().disable();
@@ -140,7 +145,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         FilterSecurityInterceptor filterSecurityInterceptor = new FilterSecurityInterceptor();
         filterSecurityInterceptor.setSecurityMetadataSource(urlFilterInvocationSecurityMetadataSource());
-        filterSecurityInterceptor.setAccessDecisionManager(affirmativeBased());
+        filterSecurityInterceptor.setAccessDecisionManager(affirmativeBased());  //접근 관리자
         filterSecurityInterceptor.setAuthenticationManager(authenticationManagerBean());
         return filterSecurityInterceptor;
     }
@@ -155,8 +160,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public FilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource() {
-        return new UrlFilterInvocationSecurityMetadatsSource();
+    public FilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource() throws Exception {
+        return new UrlFilterInvocationSecurityMetadataSource(urlResourcesMapFactoryBean().getObject(), securityResourceService);
+    }
+
+    private UrlResourcesMapFactoryBean urlResourcesMapFactoryBean() {
+
+        UrlResourcesMapFactoryBean urlResourcesMapFactoryBean = new UrlResourcesMapFactoryBean();
+        urlResourcesMapFactoryBean.setSecurityResourceService(securityResourceService);
+
+        return urlResourcesMapFactoryBean;
+
     }
 
 
