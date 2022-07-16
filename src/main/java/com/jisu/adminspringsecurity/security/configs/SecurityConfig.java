@@ -2,6 +2,7 @@ package com.jisu.adminspringsecurity.security.configs;
 
 import com.jisu.adminspringsecurity.security.common.FormWebAuthenticationDetailsSource;
 import com.jisu.adminspringsecurity.security.factory.UrlResourcesMapFactoryBean;
+import com.jisu.adminspringsecurity.security.filter.PermitAllFilter;
 import com.jisu.adminspringsecurity.security.handler.AjaxAuthenticationFailureHandler;
 import com.jisu.adminspringsecurity.security.handler.AjaxAuthenticationSuccessHandler;
 import com.jisu.adminspringsecurity.security.handler.FormAccessDeniedHandler;
@@ -52,6 +53,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private SecurityResourceService securityResourceService;
 
+    private String[] permitAllResources = {"/", "/login", "/user/login/**"};
+
     @Override
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
@@ -75,7 +78,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/mypage").hasRole("USER")
                 .antMatchers("/messages").hasRole("MANAGER")
                 .antMatchers("/config").hasRole("ADMIN")
-                .antMatchers("/**").permitAll()
+//                .antMatchers("/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -141,9 +144,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public FilterSecurityInterceptor customFilterSecurityInterceptor() throws Exception {
+    public PermitAllFilter customFilterSecurityInterceptor() throws Exception {
 
-        FilterSecurityInterceptor filterSecurityInterceptor = new FilterSecurityInterceptor();
+//        FilterSecurityInterceptor filterSecurityInterceptor = new FilterSecurityInterceptor();
+        PermitAllFilter filterSecurityInterceptor = new PermitAllFilter(permitAllResources);
         filterSecurityInterceptor.setSecurityMetadataSource(urlFilterInvocationSecurityMetadataSource());
         filterSecurityInterceptor.setAccessDecisionManager(affirmativeBased());  //접근 관리자
         filterSecurityInterceptor.setAuthenticationManager(authenticationManagerBean());
